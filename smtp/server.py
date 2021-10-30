@@ -1,5 +1,7 @@
 from typing import Callable, List
 
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import smtplib
 import traceback
 
@@ -49,6 +51,10 @@ class Server(object):
 
     def _send_plain(self, sender: str, recipients: List[str], subject: str, text: str) -> None:
         """_send_plain implements send_plain."""
-        message = "From: %s\nTo: %s\nSubject: %s\n\n%s" % (
-            sender, ", ".join(recipients), subject, text)
-        self._server.sendmail(sender, recipients, message)
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = sender
+        msg["To"] = ", ".join(recipients)
+        body = MIMEText(text, "plain", "utf-8")
+        msg.attach(body)
+        self._server.sendmail(sender, recipients, msg.as_string().encode("ascii"))
